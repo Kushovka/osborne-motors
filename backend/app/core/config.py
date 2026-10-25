@@ -1,0 +1,34 @@
+import os
+
+
+class Settings:
+    DB_USER = os.getenv("POSTGRES_USER", "osborne_motors")
+    DB_PASS = os.getenv("POSTGRES_PASSWORD", "kirill")
+    DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+    DB_PORT = os.getenv("POSTGRES_PORT", "5433")
+    DB_NAME = os.getenv("POSTGRES_DB", "osborne_motors_db")
+    BACKEND_CORS_ORIGINS = os.getenv(
+        "BACKEND_CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174,http://localhost:5188,http://127.0.0.1:5188,http://localhost:3000,http://127.0.0.1:3000",
+    )
+    META_PIXEL_ID = os.getenv("META_PIXEL_ID", "")
+    META_ACCESS_TOKEN = os.getenv("META_ACCESS_TOKEN", "")
+    BASIN_FORM_ACTION = os.getenv("BASIN_FORM_ACTION", "")
+
+    @property
+    def DB_URL(self) -> str:
+        return (
+            f"postgresql+psycopg://{self.DB_USER}:"
+            f"{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [
+            origin.strip()
+            for origin in self.BACKEND_CORS_ORIGINS.split(",")
+            if origin.strip()
+        ]
+
+
+settings = Settings()

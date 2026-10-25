@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" role="img" aria-labelledby="title">
+  <title id="title">Osborne Motors</title>
+  <text x="210" y="57" fill="#252A2E" font-family="Arial, Helvetica, sans-serif" font-size="51" font-weight="800" letter-spacing="5.5" text-anchor="middle">OSBORNE</text>
+  <path d="M8 82h83M329 82h83" fill="none" stroke="#782C32" stroke-width="6"/>
+  <text x="210" y="91" fill="#252A2E" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700" letter-spacing="9" text-anchor="middle">MOTORS</text>
+</svg>

@@ -1,0 +1,20 @@
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+secrets.txt
+
+# Dependencies and generated builds
+**/node_modules/
+**/.vite/
+**/dist/
+**/build/
+**/.venv/
+**/venv/
+**/__pycache__/
+*.py[cod]
+
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/
