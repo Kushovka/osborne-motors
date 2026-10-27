@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { FaChevronLeft, FaChevronRight, FaExpand, FaSearchPlus, FaTimes } from 'react-icons/fa'
+import { FaChevronDown, FaChevronLeft, FaChevronRight, FaChevronUp, FaSearchPlus, FaTimes } from 'react-icons/fa'
 import { listVehicleImages } from '../api/vehicles'
 
 type VehicleGalleryProps = {
@@ -8,7 +8,6 @@ type VehicleGalleryProps = {
   imagesTotal?: number
   slug: string
   title: string
-  onShowPhotos: () => void
   showAllPhotos: boolean
 }
 
@@ -16,10 +15,11 @@ const loadBatchSize = 8
 const mediaVariantUrl = (image: string, variant: string) => image.replace(/(\/media\/vehicles\/[^/]+)\/(?:(?:gallery|thumbs)\/)?([^/]+)$/, `$1/${variant}/$2`)
 const thumbnailUrl = (image: string) => mediaVariantUrl(image, 'thumbs')
 
-export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos, showAllPhotos }: VehicleGalleryProps) => {
+export const VehicleGallery = ({ images, imagesTotal, slug, title, showAllPhotos }: VehicleGalleryProps) => {
   const [active, setActive] = useState(0)
   const [loadedImages, setLoadedImages] = useState(images)
   const [totalImages, setTotalImages] = useState(imagesTotal || images.length)
+  const [thumbnailStart, setThumbnailStart] = useState(0)
   const [imageLoading, setImageLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [lightbox, setLightbox] = useState(false)
@@ -28,7 +28,7 @@ export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos,
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
 
   const currentImage = loadedImages[active] ?? loadedImages[0] ?? '/images/vehicle-photo-coming-soon.webp'
-  const sideImages = loadedImages.map((image, index) => ({ image, index })).filter(({ index }) => index !== active).slice(0, 3)
+  const sideImages = loadedImages.slice(thumbnailStart, thumbnailStart + 6).map((image, offset) => ({ image, index: thumbnailStart + offset }))
   const photoGridTarget = document.getElementById('vehicle-photos-grid')
 
   useEffect(() => {
@@ -39,6 +39,7 @@ export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos,
     setActive(0)
     setLoadedImages(images)
     setTotalImages(imagesTotal || images.length)
+    setThumbnailStart(0)
     setImageLoading(false)
     setLoadingMore(false)
     setZoomed(false)
@@ -59,11 +60,36 @@ export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos,
     }
   }, [loadedImages, loadingMore, slug, totalImages])
 
+  const nextThumbnailBatch = useCallback(async () => {
+    if (loadingMore || thumbnailStart + 6 >= totalImages) return
+    const nextStart = thumbnailStart + 6
+    const targetEnd = Math.min(totalImages, nextStart + 6)
+    if (targetEnd > loadedImages.length) {
+      setLoadingMore(true)
+      try {
+        const response = await listVehicleImages(slug, loadedImages.length, Math.max(loadBatchSize, targetEnd - loadedImages.length))
+        const known = new Set(loadedImages)
+        const additions = response.items.filter((image) => !known.has(image))
+        setLoadedImages((current) => [...current, ...additions])
+        setTotalImages(response.total)
+      } finally {
+        setLoadingMore(false)
+      }
+    }
+    setThumbnailStart(nextStart)
+  }, [loadedImages, loadingMore, slug, thumbnailStart, totalImages])
+
+  const previousThumbnailBatch = useCallback(() => {
+    if (loadingMore || thumbnailStart === 0) return
+    setThumbnailStart(Math.max(0, thumbnailStart - 6))
+  }, [loadingMore, thumbnailStart])
+
   const goTo = useCallback(async (index: number) => {
     const nextIndex = index < 0 ? totalImages - 1 : index >= totalImages ? 0 : index
     if (nextIndex < loadedImages.length) {
       setImageLoading(loadedImages[nextIndex] !== loadedImages[active])
       setActive(nextIndex)
+      setThumbnailStart(Math.floor(nextIndex / 6) * 6)
       setZoomed(false)
       return
     }
@@ -78,6 +104,7 @@ export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos,
       if (nextIndex < loadedImages.length + additions.length) {
         setImageLoading(additions[nextIndex - loadedImages.length] !== loadedImages[active])
         setActive(nextIndex)
+        setThumbnailStart(Math.floor(nextIndex / 6) * 6)
         setZoomed(false)
       }
     } finally {
@@ -115,21 +142,22 @@ export const VehicleGallery = ({ images, imagesTotal, slug, title, onShowPhotos,
     }
   }, [lightbox, next, previous])
 
-  const thumbnails = loadedImages.slice(0, 6)
-  const showMorePhotos = totalImages > thumbnails.length
+  const showMorePhotos = thumbnailStart + sideImages.length < totalImages
 
   return <div>
     <div className="vehicle-gallery-mosaic" onTouchStart={(event) => setTouchStartX(event.touches[0]?.clientX ?? null)} onTouchEnd={(event) => { if (touchStartX === null) return; const delta = event.changedTouches[0].clientX - touchStartX; if (Math.abs(delta) > 48) { if (delta > 0) previous(); else next() }; setTouchStartX(null) }}>
       <div className="vehicle-gallery-mosaic__main">
         <button aria-label="Open main vehicle photo" className="vehicle-gallery-mosaic__image" onClick={() => setLightbox(true)} type="button"><img src={currentImage} alt={title} className={imageLoading ? 'is-loading' : ''} onLoad={() => setImageLoading(false)} onError={() => setImageLoading(false)} /></button>
+        <span className="vehicle-gallery-mosaic__count">{active + 1} / {totalImages}</span>
         {loadedImages.length > 1 ? <>
           <button aria-label="Previous image" className="vehicle-gallery-mosaic__arrow vehicle-gallery-mosaic__arrow--previous" disabled={loadingMore} onClick={previous} type="button"><FaChevronLeft /></button>
           <button aria-label="Next image" className="vehicle-gallery-mosaic__arrow vehicle-gallery-mosaic__arrow--next" disabled={loadingMore} onClick={next} type="button"><FaChevronRight /></button>
         </> : null}
       </div>
       <div className="vehicle-gallery-mosaic__side">
-        {sideImages.map(({ image, index }, previewIndex) => <button key={`${image}-${index}`} aria-label={previewIndex === 2 && showMorePhotos ? 'Show all vehicle photos' : `View photo ${index + 1}`} aria-pressed={active === index} className="vehicle-gallery-mosaic__thumbnail" type="button" onClick={() => { if (previewIndex === 2 && showMorePhotos) { onShowPhotos(); void loadMoreImages() } else { void goTo(index) } }}><img src={thumbnailUrl(image)} alt={`${title}, photo ${index + 1}`} loading="lazy" decoding="async" />{previewIndex === 2 && showMorePhotos ? <span><FaExpand aria-hidden="true" /> View all {totalImages} photos</span> : null}</button>)}
-        {sideImages.length < 3 ? Array.from({ length: 3 - sideImages.length }, (_, index) => <div key={`more-${index}`} className="vehicle-gallery-mosaic__thumbnail vehicle-gallery-mosaic__thumbnail--empty" aria-label="Vehicle photo coming soon"><img src="/images/vehicle-photo-coming-soon-card.webp" alt="Vehicle photo coming soon" /><span>Photo coming soon</span></div>) : null}
+        <button className="vehicle-gallery-mosaic__view-all vehicle-gallery-mosaic__view-all--previous" type="button" aria-label="Show previous vehicle photos" disabled={loadingMore || thumbnailStart === 0} onClick={previousThumbnailBatch}><FaChevronUp aria-hidden="true" /></button>
+        {sideImages.map(({ image, index }) => <button key={`${image}-${index}`} aria-label={`View photo ${index + 1}`} aria-pressed={active === index} className="vehicle-gallery-mosaic__thumbnail" type="button" onClick={() => void goTo(index)}><img src={thumbnailUrl(image)} alt={`${title}, photo ${index + 1}`} loading="lazy" decoding="async" /></button>)}
+        <button className="vehicle-gallery-mosaic__view-all" type="button" aria-label={`Show next vehicle photos, ${Math.min(6, Math.max(0, totalImages - thumbnailStart - sideImages.length))} more in this batch`} disabled={loadingMore || !showMorePhotos} onClick={() => void nextThumbnailBatch()}><FaChevronDown aria-hidden="true" /></button>
       </div>
       {loadingMore ? <span className="vehicle-gallery-mosaic__loading">Loading photos…</span> : null}
     </div>

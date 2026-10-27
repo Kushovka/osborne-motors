@@ -4,7 +4,6 @@ import { useLocation, useOutlet } from 'react-router'
 import { Header } from './Header'
 import { Footer } from './Footer'
 import { ScrollToTop } from './ScrollToTop'
-import { CookieBanner } from './CookieBanner'
 import { initMetaPixel, trackPageView } from '../utils/metaPixel'
 
 export const Layout = () => {
@@ -35,7 +34,6 @@ export const Layout = () => {
         </AnimatePresence>
       </div>
       <Footer />
-      <CookieBanner />
     </div>
   )
 }

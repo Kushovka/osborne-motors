@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class LeadCreate(BaseModel):
@@ -27,6 +27,7 @@ class LeadCreate(BaseModel):
     source_page: str | None = None
     consent_to_contact: bool = True
     meta_event_id: str | None = None
+    test_event_code: str | None = Field(default=None, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
     fbp: str | None = None
     fbc: str | None = None
     user_agent: str | None = None
@@ -50,5 +51,6 @@ class LeadRead(BaseModel):
     source_page: str | None
     consent_to_contact: bool
     created_at: datetime
+    capi_ticket: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

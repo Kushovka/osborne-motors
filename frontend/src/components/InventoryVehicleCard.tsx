@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { FaArrowRight } from 'react-icons/fa'
 import type { Vehicle } from '../types/vehicle'
-import { formatNumber, formatPrice } from '../utils/format'
+import { formatNumber, formatVehiclePrice, formatVehicleTitle } from '../utils/format'
 
 const simpleDrivetrain = (value: string) => {
   if (/4wd|four[-\s]?wheel/i.test(value)) return '4WD'
@@ -13,15 +13,16 @@ const simpleDrivetrain = (value: string) => {
 }
 
 const simpleTransmission = (value: string) => /dual[-\s]?clutch|\bdct\b/i.test(value) ? 'DCT' : value
-export const InventoryVehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
-  const title = `${vehicle.year} ${vehicle.make} ${vehicle.model}${vehicle.trim ? ` ${vehicle.trim}` : ''}`
+export const InventoryVehicleCard = ({ vehicle, variant = 'default' }: { vehicle: Vehicle; variant?: 'default' | 'inventory' }) => {
+  const title = formatVehicleTitle(vehicle)
+  const isPlaceholder = vehicle.status === 'Placeholder'
   const drivetrain = simpleDrivetrain(vehicle.drivetrain)
   const transmission = simpleTransmission(vehicle.transmission)
   const [photoAspectRatio, setPhotoAspectRatio] = useState(1.5)
   const photoUrl = vehicle.images[0] || '/images/vehicle-photo-coming-soon-card.webp'
   const photoObjectPosition = photoAspectRatio < 0.9 ? 'center 55%' : photoAspectRatio < 1.1 ? 'center 40%' : 'center 72%'
 
-  return <article className="inventory-vehicle-card">
+  return <article className={`inventory-vehicle-card${variant === 'inventory' ? ' inventory-vehicle-card--reference' : ''}`}>
     <div className="inventory-vehicle-card__photo">
       <Link to={`/inventory/${vehicle.slug}`} className="inventory-vehicle-card__photo-link" aria-label={`View ${title}`}>
         <img className="inventory-vehicle-card__photo-backdrop" src={photoUrl} alt="" aria-hidden="true" loading="lazy" />
@@ -30,18 +31,25 @@ export const InventoryVehicleCard = ({ vehicle }: { vehicle: Vehicle }) => {
           if (naturalWidth && naturalHeight) setPhotoAspectRatio(naturalWidth / naturalHeight)
         }} />
       </Link>
-      {vehicle.stockNumber.trim() ? <span className="inventory-vehicle-card__stock" aria-label={`Stock number ${vehicle.stockNumber}`}>{vehicle.stockNumber}</span> : null}
+      {isPlaceholder ? <span className="inventory-vehicle-card__stock">Placeholder</span> : vehicle.stockNumber.trim() ? <span className="inventory-vehicle-card__stock" aria-label={`Stock number ${vehicle.stockNumber}`}>{vehicle.stockNumber}</span> : null}
     </div>
     <div className="inventory-vehicle-card__body">
       <h3><Link to={`/inventory/${vehicle.slug}`}>{title}</Link></h3>
-      <p className="inventory-vehicle-card__price">{formatPrice(vehicle.price)}</p>
+      <p className="inventory-vehicle-card__price">{formatVehiclePrice(vehicle)}</p>
       <p className="inventory-vehicle-card__specs">
-        <span>{vehicle.mileage > 0 ? `${formatNumber(vehicle.mileage)} miles` : 'Mileage not listed'}</span>
-        {drivetrain ? <span>{drivetrain}</span> : null}
-        {transmission ? <span className="inventory-vehicle-card__specs-transmission">{transmission}</span> : null}
+        {variant === 'inventory' ? <>
+          <span><strong>Mileage:</strong>{' '}{vehicle.mileage > 0 ? formatNumber(vehicle.mileage) : 'Not listed'}</span>
+          {vehicle.engine ? <span><strong>Engine:</strong>{' '}{vehicle.engine}</span> : null}
+          {transmission ? <span><strong>Transmission:</strong>{' '}{transmission}</span> : null}
+          {drivetrain ? <span><strong>Drivetrain:</strong>{' '}{drivetrain}</span> : null}
+        </> : <>
+          <span>{vehicle.mileage > 0 ? `${formatNumber(vehicle.mileage)} miles` : 'Mileage not listed'}</span>
+          {drivetrain ? <span>{drivetrain}</span> : null}
+          {transmission ? <span className="inventory-vehicle-card__specs-transmission">{transmission}</span> : null}
+        </>}
       </p>
       <Link className="inventory-vehicle-card__details" to={`/inventory/${vehicle.slug}`}>
-        <span>View Vehicle Details</span><FaArrowRight aria-hidden="true" />
+        <span>{variant === 'inventory' ? 'View Details' : 'View Vehicle Details'}</span><FaArrowRight aria-hidden="true" />
       </Link>
     </div>
   </article>

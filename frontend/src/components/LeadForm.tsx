@@ -1,23 +1,24 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { FaArrowRight, FaInfoCircle } from 'react-icons/fa'
-import { createLead } from '../api/leads'
+import { createLead, sendMetaCapiLead } from '../api/leads'
 import { trackingConfig } from '../config/tracking'
 import { createMetaEventId, getCookieValue, splitName, trackLead } from '../utils/metaPixel'
+import { getTestEventCode } from '../utils/metaAttribution'
 
 type LeadFormProps = {
   title: string
   vehicleId?: string
+  vehicleContentId?: string
   vehicleName?: string
   vehicleValue?: number
   messagePlaceholder?: string
+  namePlaceholder?: string
+  emailPlaceholder?: string
   className?: string
-  variant?: 'contact' | 'default' | 'vehicle' | 'vehicle-inline'
-  showVehicleInterest?: boolean
   phonePlaceholder?: string
   actionAside?: ReactNode
-  inquiryOptions?: string[]
-  inquiryLabel?: string
   notice?: string
+  noticeLabel?: string
 }
 
 const COUNTRY_CODE_PREFIX = '+1 '
@@ -40,7 +41,7 @@ const formatUsPhone = (value: string) => {
   return `${COUNTRY_CODE_PREFIX}(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
 }
 
-export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messagePlaceholder = 'Message (optional)', className = '', variant = 'default', showVehicleInterest = false, phonePlaceholder = '(704) 555-0100', actionAside, inquiryOptions, inquiryLabel, notice = 'No finance available.' }: LeadFormProps) => {
+export const LeadForm = ({ title, vehicleId, vehicleContentId, vehicleName, vehicleValue, messagePlaceholder = 'Message', namePlaceholder = 'John Smith', emailPlaceholder, className = '', phonePlaceholder = '(704) 555-0100', actionAside, notice = 'No finance available.', noticeLabel = 'Important information' }: LeadFormProps) => {
   const formStartedAt = useMemo(() => Date.now(), [])
   const [sent, setSent] = useState(false)
   const [error, setError] = useState('')
@@ -49,8 +50,7 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
 
   return (
     <form
-      id={variant === 'contact' ? 'contact-form' : undefined}
-      className={`surface-card p-5 sm:p-6 ${variant === 'contact' ? 'contact-form' : variant === 'vehicle' ? 'lg:p-7' : variant === 'vehicle-inline' ? 'vehicle-inline-form' : 'rounded-md'} ${className}`}
+      className={`surface-card p-5 sm:p-6 vehicle-inline-form ${className}`}
       action="/api/leads"
       method="post"
       onSubmit={async (event) => {
@@ -66,19 +66,18 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
         const email = String(form.get('email') ?? '').trim()
         const website = String(form.get('website') ?? '').trim()
         const message = String(form.get('message') ?? '').trim()
-        const inquiryType = String(form.get('inquiryType') ?? '').trim()
-        const vehicleInterest = String(form.get('vehicleInterest') ?? '').trim()
-        const leadMessage = [inquiryType ? `Inquiry type: ${inquiryType}` : '', message, vehicleInterest ? `Vehicle or Stock: ${vehicleInterest}` : ''].filter(Boolean).join('\n')
+        const leadMessage = message
         const leadType = vehicleId ? 'quote' : 'contact'
         const metaEventId = createMetaEventId('lead')
         const fbp = getCookieValue('_fbp')
         const fbc = getCookieValue('_fbc')
         const { firstName: metaFirstName, lastName: metaLastName } = splitName(customerName)
-        const contentIds = [vehicleId ?? `${trackingConfig.meta.defaultLeadContentPrefix}-${leadType}`]
+        const contentIds = [vehicleContentId?.trim() || vehicleId || `${trackingConfig.meta.defaultLeadContentPrefix}-${leadType}`]
         const contentType = vehicleId ? trackingConfig.meta.productContentType : trackingConfig.meta.serviceContentType
         const contentName = vehicleName ?? `${leadType} request`
         const currency = trackingConfig.meta.currency
         const eventValue = vehicleValue ?? trackingConfig.meta.defaultLeadValue
+        const testEventCode = getTestEventCode()
 
         if (phone.length !== 10) {
           setSubmitting(false)
@@ -87,7 +86,7 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
         }
 
         try {
-          await createLead({
+          const savedLead = await createLead({
             vehicleId,
             leadType,
             customerName,
@@ -95,6 +94,7 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
             email,
             message: leadMessage,
             metaEventId,
+            testEventCode,
             fbp,
             fbc,
             userAgent: navigator.userAgent,
@@ -129,6 +129,19 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
           } catch {
             // Browser tracking can be blocked; the lead itself was already submitted.
           }
+          if (savedLead.capi_ticket) {
+            try {
+              await sendMetaCapiLead({
+                leadId: savedLead.id, eventId: metaEventId, capiTicket: savedLead.capi_ticket,
+                email, phone, firstName: metaFirstName, lastName: metaLastName, contentId: contentIds[0],
+                contentType, currency, price: eventValue ?? 0,
+                zip: String(form.get('zipCode') ?? '').trim() || undefined, fbp, fbc,
+                eventSourceUrl: window.location.href, testEventCode,
+              })
+            } catch {
+              // The lead is saved even if Meta does not accept its CAPI event.
+            }
+          }
           setError('')
           setSent(true)
           setPhoneValue('')
@@ -141,23 +154,25 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
         }
       }}
     >
-      {variant === 'default' ? <><p className="eyebrow">Quick request</p><h3 className="mt-2 text-2xl font-normal text-[var(--color-text)]">{title}</h3>{vehicleName ? <p className="mt-1 text-sm font-normal text-[var(--color-muted)]">{vehicleName}</p> : null}</> : null}
       {notice ? <aside className="form-notice" aria-label="Important information">
-        <FaInfoCircle aria-hidden="true" />
-        <p><strong>Please note:</strong> {notice}</p>
+        <span className="form-notice__icon"><FaInfoCircle aria-hidden="true" /></span>
+        <div className="form-notice__content">
+          <span className="form-notice__label">{noticeLabel}</span>
+          <p>{notice}</p>
+        </div>
       </aside> : null}
-      <div className={`${variant === 'vehicle' || variant === 'vehicle-inline' ? '' : 'mt-5'} grid min-w-0 gap-2.5 ${variant === 'vehicle-inline' ? 'vehicle-inline-form__fields' : 'sm:grid-cols-2'}`}>
+      <div className="grid min-w-0 gap-2.5 vehicle-inline-form__fields">
         <div className="hidden" aria-hidden="true">
           <label>
             Website
             <input name="website" tabIndex={-1} autoComplete="off" />
           </label>
         </div>
-        <label className={`lead-form-name${variant === 'vehicle-inline' ? '' : ' sm:col-span-2'}${variant === 'contact' ? ' contact-field' : ' grid min-w-0 gap-1.5 text-sm font-semibold text-[var(--color-text)]'}`}>
+        <label className="lead-form-name">
           <span>Full Name <b>*</b></span>
-          <input required aria-label="Full name" className="input" name="firstName" placeholder="John Smith" autoComplete="name" />
+          <input required aria-label="Full name" className="input" name="firstName" placeholder={namePlaceholder} autoComplete="name" />
         </label>
-        <label className={`lead-form-field${variant === 'contact' ? ' contact-field' : ''}`}>
+        <label className="lead-form-field">
           <span>Phone Number <b>*</b></span>
           <input
           required
@@ -180,18 +195,13 @@ export const LeadForm = ({ title, vehicleId, vehicleName, vehicleValue, messageP
           }}
           />
         </label>
-        <label className={`lead-form-field lead-form-field-email${variant === 'contact' ? ' contact-field' : ''}`}>
-          <span>Email Address {variant === 'contact' || variant === 'vehicle-inline' ? <b>*</b> : <small>(Optional)</small>}</span>
-          <input required={variant === 'contact' || variant === 'vehicle-inline'} aria-label="Email" className="input" name="email" placeholder={variant === 'contact' || variant === 'vehicle-inline' ? 'john@example.com' : 'Email'} type="email" autoComplete="email" />
+        <label className="lead-form-field lead-form-field-email">
+          <span>Email Address <b>*</b></span>
+          <input required aria-label="Email" className="input" name="email" placeholder={emailPlaceholder ?? 'john@example.com'} type="email" autoComplete="email" />
         </label>
-        {inquiryOptions ? inquiryLabel ? <label className={`lead-form-field${variant === 'contact' ? ' contact-field' : ' sm:col-span-2'}`}><span>{inquiryLabel} <b>*</b></span><select required aria-label={inquiryLabel} className="input" name="inquiryType" defaultValue=""><option value="" disabled>Select a contact method</option>{inquiryOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select></label> : <select aria-label="What can we help you with?" className="input sm:col-span-2" name="inquiryType" defaultValue=""><option value="" disabled>What can we help you with?</option>{inquiryOptions.map((option) => <option key={option} value={option}>{option}</option>)}</select> : null}
-        {showVehicleInterest ? <label className={`lead-form-field${variant === 'contact' ? ' contact-field' : ' sm:col-span-2'}`}>
-          <span>Vehicle of Interest <small>(Optional)</small></span>
-          <input aria-label="Vehicle or Stock Number (optional)" className="input" name="vehicleInterest" placeholder={variant === 'contact' ? 'Select a Vehicle (Optional)' : 'Vehicle or Stock (optional)'} />
-        </label> : null}
-        <label className={`lead-form-field lead-form-field-message${variant === 'contact' ? ' contact-field contact-field-message' : variant === 'vehicle-inline' ? '' : ' sm:col-span-2'}`}>
-          <span>Message {variant === 'contact' ? <b>*</b> : <small>(Optional)</small>}</span>
-          <textarea required={variant === 'contact'} aria-label="Message" className={`input${variant === 'contact' ? '' : ' min-h-28'}`} name="message" placeholder={messagePlaceholder} />
+        <label className="lead-form-field lead-form-field-message">
+          <span>Message <b>*</b></span>
+          <textarea required aria-label="Message" className="input" name="message" placeholder={messagePlaceholder} />
         </label>
       </div>
       <div className={`mt-5${actionAside ? ' form-actions-with-aside' : ''}`}>

@@ -6,7 +6,6 @@ import { MaintenancePage } from './pages/MaintenancePage'
 const AboutPage = lazy(() => import('./pages/AboutPage').then((module) => ({ default: module.AboutPage })))
 const ContactPage = lazy(() => import('./pages/ContactPage').then((module) => ({ default: module.ContactPage })))
 const DeliveryPage = lazy(() => import('./pages/DeliveryPage').then((module) => ({ default: module.DeliveryPage })))
-const GuaranteePage = lazy(() => import('./pages/GuaranteePage').then((module) => ({ default: module.GuaranteePage })))
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })))
 const InventoryPage = lazy(() => import('./pages/InventoryPage').then((module) => ({ default: module.InventoryPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((module) => ({ default: module.PrivacyPage })))
@@ -15,7 +14,7 @@ const TeamPage = lazy(() => import('./pages/TeamPage').then((module) => ({ defau
 const VehicleDetailPage = lazy(() => import('./pages/VehicleDetailPage').then((module) => ({ default: module.VehicleDetailPage })))
 const WarrantyPage = lazy(() => import('./pages/WarrantyPage').then((module) => ({ default: module.WarrantyPage })))
 
-const RouteFallback = () => <div className="min-h-[70vh] bg-[var(--color-warm-white)]" aria-label="Loading page" />
+const RouteFallback = () => <div className="min-h-[70vh] bg-[var(--color-warm-white)]" role="status" aria-live="polite"><span className="sr-only">Loading page</span></div>
 
 const maintenanceMode = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
 
@@ -30,7 +29,6 @@ const App = () => (
         <Route path="inventory" element={<Suspense fallback={<RouteFallback />}><InventoryPage /></Suspense>} />
         <Route path="inventory/:slug" element={<Suspense fallback={<RouteFallback />}><VehicleDetailPage /></Suspense>} />
         <Route path="delivery" element={<Suspense fallback={<RouteFallback />}><DeliveryPage /></Suspense>} />
-        <Route path="guarantee" element={<Suspense fallback={<RouteFallback />}><GuaranteePage /></Suspense>} />
         <Route path="warranty" element={<Suspense fallback={<RouteFallback />}><WarrantyPage /></Suspense>} />
         <Route path="about" element={<Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>} />
         <Route path="team" element={<Suspense fallback={<RouteFallback />}><TeamPage /></Suspense>} />

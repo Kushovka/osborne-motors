@@ -14,8 +14,6 @@ const inventoryLinks = [
 const serviceLinks = [
   ['Vehicle Delivery', '/delivery'],
   ['Warranty', '/warranty'],
-  ['Purchase Terms', '/guarantee'],
-  ['FAQ', '/contact#faq'],
 ] as const
 
 const aboutLinks = [
@@ -26,12 +24,12 @@ const aboutLinks = [
   ['Contact Us', '/contact'],
 ] as const
 
-export const Footer = () => (
-  <footer className="dealer-footer">
+export const Footer = () => {
+  return <footer className="dealer-footer">
     <div className="dealer-footer__main">
       <section className="dealer-footer__brand" aria-label="Osborne Motors">
         <Link to="/" className="dealer-footer__logo" aria-label="Osborne Motors home">
-          <img src="/images/osborne-motors-logo.png" alt="Osborne Motors" />
+          <img src="/images/osborne-motors-logo.webp" alt="Osborne Motors" />
         </Link>
         <p>{business.address}<br />{business.cityState} {business.postalCode}</p>
       </section>
@@ -77,4 +75,4 @@ export const Footer = () => (
       </nav>
     </div>
   </footer>
-)
+}

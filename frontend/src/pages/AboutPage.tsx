@@ -1,35 +1,78 @@
-import { FaArrowRight, FaClock, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa'
+import { useState } from 'react'
+import { FaArrowRight, FaPhoneAlt } from 'react-icons/fa'
+import { Link } from 'react-router'
 import { Seo } from '../components/Seo'
+import { HeaderMessageDialog } from '../components/HeaderMessageDialog'
 import { business } from '../data/business'
+import { trackContactCta } from '../utils/ctaTracking'
 
-export const AboutPage = () => (
-  <main className="about-page about-reference">
-    <Seo title="About Osborne Motors" description="Find Osborne Motors at 516 E Norfolk Ave in Norfolk, Nebraska. View current hours and contact details." />
-    <section className="ar-hero ar-frame">
-      <div className="ar-hero-copy">
-        <h1>Osborne Motors</h1>
-        <h2>Automotive service in Norfolk, Nebraska.</h2>
-        <p>Visit us at 516 E Norfolk Ave or call with questions about our current vehicles and services.</p>
-        <p className="ar-tagline">Osborne Motors · Norfolk, Nebraska</p>
+const aboutValues = [
+  {
+    title: 'Quality Vehicles',
+    description: 'We carefully inspect our vehicles to make sure they’re ready for the road. You’ll find a variety of cars, trucks, and SUVs to fit your needs.',
+  },
+  {
+    title: 'Local and Reliable',
+    description: 'We’re proud to be part of the Norfolk community and work hard to build long-term relationships with our customers.',
+  },
+  {
+    title: 'Here to Help',
+    description: 'Our team is always ready to answer your questions, provide vehicle information, and help you find the right option for your budget and lifestyle.',
+  },
+]
+
+export const AboutPage = () => {
+  const [inquiryOpen, setInquiryOpen] = useState(false)
+
+  return <>
+  <main className="about-page about-ref">
+  <Seo title="About Osborne Motors" description="Learn about Osborne Motors in Norfolk, Nebraska, and our approach to helping customers find a vehicle." />
+
+  <header className="about-ref__titlebar">
+    <div className="about-ref__titlebar-inner">
+      <h1>About Osborne Motors</h1>
+    </div>
+  </header>
+
+  <div className="about-ref__content">
+    <section className="about-ref__intro" aria-labelledby="about-intro-title">
+      <div>
+        <h2 id="about-intro-title">A Local Dealership You Can Count On</h2>
+        <p>At Osborne Motors, we’re committed to providing quality vehicles and honest, straightforward service to our customers in Norfolk, NE and the surrounding communities.</p>
       </div>
-      <img className="ar-hero-photo" src="/images/vehicle-photo-coming-soon.webp" alt="Automotive service" fetchPriority="high" decoding="async" />
-      <aside className="ar-visit-card">
-        <h3>Visit Osborne Motors</h3>
-        <p><FaMapMarkerAlt /><span><strong>{business.address}<br />{business.cityState} {business.postalCode}</strong></span></p>
-        <p><FaClock /><span><strong>Hours</strong><small>Mon–Fri: 9:00 AM–6:00 PM<br />Sat: 9:00 AM–4:00 PM<br />Sun: Closed</small></span></p>
-        <a className="ar-button ar-button--red" href={business.phoneHref}><FaPhoneAlt /> Call {business.phoneDisplay}</a>
-        <a className="ar-button ar-button--outline" href={business.mapsUrl} target="_blank" rel="noreferrer"><FaMapMarkerAlt /> Get Directions <FaArrowRight /></a>
-      </aside>
+      <img src="/images/osborne-dealership-exterior.webp" alt="Vehicles parked outside the Osborne Motors dealership" fetchPriority="high" />
     </section>
-    <section className="ar-local ar-frame">
-      <div className="ar-local-copy"><h2>Find Us in Norfolk</h2><i /><p>Osborne Motors is located at 516 E Norfolk Ave, Norfolk, NE 68701. Call us during business hours for current information.</p></div>
-      <div className="ar-contact-card">
-        <p><FaMapMarkerAlt /><span><strong>{business.address}<br />{business.cityState} {business.postalCode}</strong></span></p>
-        <a href={business.phoneHref}><FaPhoneAlt /><strong>{business.phoneDisplay}</strong></a>
-        <p><FaClock /><span><strong>Hours</strong><small>Mon–Fri: 9:00 AM–6:00 PM<br />Sat: 9:00 AM–4:00 PM<br />Sun: Closed</small></span></p>
+
+    <section className="about-ref__story" aria-labelledby="about-story-title">
+      <div>
+        <h2 id="about-story-title">Serving Our Community</h2>
+        <p>Osborne Motors is a locally owned and operated dealership in Norfolk, Nebraska. We take pride in offering a selection of reliable used vehicles and a no-pressure buying experience. Our goal is simple: help you find the right vehicle at a fair price and provide service you can trust.</p>
       </div>
-      <a className="ar-map" href={business.mapsUrl} target="_blank" rel="noreferrer" aria-label="Open directions to Osborne Motors"><iframe title={`Map to ${business.name}`} src={business.mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" /></a>
+      <Link to="/inventory">View Our Inventory <FaArrowRight aria-hidden="true" /></Link>
     </section>
-    <section className="ar-faq ar-band"><div className="ar-faq-copy"><h2>Questions?</h2><i /><p>Call Osborne Motors for current information.</p></div><div className="ar-faq-list"><article><h3><a href={business.phoneHref}>{business.phoneDisplay}</a></h3><p>{business.address}, {business.cityState} {business.postalCode}</p></article></div></section>
-  </main>
-)
+
+    <section className="about-ref__approach" aria-labelledby="about-approach-title">
+      <h2 id="about-approach-title">Honest, Straightforward, Customer-Focused</h2>
+      <p>We believe in keeping things simple. No high-pressure sales tactics or hidden fees. Just honest information and quality vehicles. Whether you’re buying your first truck, upgrading your family vehicle, or adding to your business fleet, we’re here to help you through the process.</p>
+    </section>
+
+    <section className="about-ref__values" aria-label="What you can expect at Osborne Motors">
+      {aboutValues.map((value) => <article key={value.title}>
+        <h2>{value.title}</h2>
+        <p>{value.description}</p>
+      </article>)}
+    </section>
+
+    <section className="about-ref__contact" aria-labelledby="about-contact-title">
+      <h2 id="about-contact-title">Get in Touch</h2>
+      <div>
+        <p>We’re always happy to talk. Give us a call, stop by our dealership in Norfolk, or send us a message. We look forward to helping you.</p>
+        <button type="button" onClick={() => { trackContactCta('message_click', 'About Page Phone CTA Form Button'); setInquiryOpen(true) }}><FaPhoneAlt aria-hidden="true" />{business.phoneDisplay}</button>
+        <button type="button" onClick={() => { trackContactCta('message_click', 'About Page Message CTA'); setInquiryOpen(true) }}>Contact Us <FaArrowRight aria-hidden="true" /></button>
+      </div>
+    </section>
+  </div>
+</main>
+  <HeaderMessageDialog open={inquiryOpen} onClose={() => setInquiryOpen(false)} titleId="about-inquiry-dialog-title" />
+  </>
+}

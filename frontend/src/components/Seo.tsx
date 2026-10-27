@@ -44,7 +44,7 @@ export const Seo = ({ title, description, schema, noIndex = false }: SeoProps) =
     setMeta('meta[property="og:description"]', { property: 'og:description' }, description)
     setMeta('meta[property="og:url"]', { property: 'og:url' }, canonicalUrl)
     setMeta('meta[property="og:type"]', { property: 'og:type' }, 'website')
-    setMeta('meta[property="og:image"]', { property: 'og:image' }, `${siteUrl}/images/vehicle-photo-coming-soon.webp`)
+    setMeta('meta[property="og:image"]', { property: 'og:image' }, `${siteUrl}/images/osborne-dealership-reference.webp`)
     setMeta('meta[name="twitter:card"]', { name: 'twitter:card' }, 'summary_large_image')
 
     let canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]')

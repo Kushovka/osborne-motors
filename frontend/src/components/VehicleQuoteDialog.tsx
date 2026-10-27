@@ -6,11 +6,12 @@ type VehicleQuoteDialogProps = {
   open: boolean
   onClose: () => void
   vehicleId: string
+  vehicleContentId: string
   vehicleName: string
   vehicleValue: number
 }
 
-export const VehicleQuoteDialog = ({ open, onClose, vehicleId, vehicleName, vehicleValue }: VehicleQuoteDialogProps) => {
+export const VehicleQuoteDialog = ({ open, onClose, vehicleId, vehicleContentId, vehicleName, vehicleValue }: VehicleQuoteDialogProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
@@ -45,12 +46,17 @@ export const VehicleQuoteDialog = ({ open, onClose, vehicleId, vehicleName, vehi
         <LeadForm
           title="Send Message"
           vehicleId={vehicleId}
+          vehicleContentId={vehicleContentId}
           vehicleName={vehicleName}
           vehicleValue={vehicleValue}
-          variant="vehicle-inline"
           className="vehicle-inquiry-form"
-          phonePlaceholder="(402) 379-0445"
-          messagePlaceholder="Ask about this vehicle..."
+          namePlaceholder="Enter your full name"
+          phonePlaceholder="Enter your phone number"
+          emailPlaceholder="Enter your email address"
+          messagePlaceholder="Let us know if you have any questions about this vehicle..."
+          notice="No financing available."
+          noticeLabel="Financing"
+          actionAside={<p className="vehicle-inquiry__consent">By submitting this form, you agree to be contacted by Osborne Motors.</p>}
         />
       </div>
     </dialog>

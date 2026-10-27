@@ -4,12 +4,12 @@ import { Link } from 'react-router'
 import { useEffect, useState } from 'react'
 import { FaArrowRight, FaChevronLeft, FaChevronRight, FaClock, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { listVehicles } from '../api/vehicles'
+import { listVehicleImages, listVehicles } from '../api/vehicles'
 import type { Vehicle } from '../types/vehicle'
 import { InventoryVehicleCard } from '../components/InventoryVehicleCard'
 import { business } from '../data/business'
 import { trackContactCta } from '../utils/ctaTracking'
-import { formatNumber, formatPrice } from '../utils/format'
+import { formatNumber, formatVehiclePrice, formatVehicleTitle } from '../utils/format'
 
 export const HomePage = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
@@ -18,8 +18,17 @@ export const HomePage = () => {
   useEffect(() => {
     let active = true
     void listVehicles({ page: 1, pageSize: 6, sort: 'year_desc' })
-      .then(({ items }) => {
-        if (active) setVehicles(items)
+      .then(async ({ items }) => {
+        const vehiclesWithHeroImages = await Promise.all(items.map(async (vehicle, index) => {
+          if (index < 3) return vehicle
+          try {
+            const { items: galleryImages } = await listVehicleImages(vehicle.slug, 0, 1)
+            return galleryImages[0] ? { ...vehicle, images: [galleryImages[0], ...vehicle.images.slice(1)] } : vehicle
+          } catch {
+            return vehicle
+          }
+        }))
+        if (active) setVehicles(vehiclesWithHeroImages)
       })
       .catch(() => {
         if (active) setVehicles([])
@@ -83,7 +92,7 @@ const HomeHero = ({ vehicles }: { vehicles: Vehicle[] }) => {
       <div className="reference-home-hero__media" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)} onFocus={() => setIsPaused(true)} onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsPaused(false)
       }}>
-        {vehicle && photo ? <Link className="reference-home-hero__vehicle-link" to={`/inventory/${vehicle.slug}`} aria-label={`View ${vehicle.year} ${vehicle.make} ${vehicle.model}`}>
+        {vehicle && photo ? <Link className="reference-home-hero__vehicle-link" to={`/inventory/${vehicle.slug}`} aria-label={`View ${formatVehicleTitle(vehicle)}`}>
           <span className="reference-home-hero__image-stage">
             <AnimatePresence initial={false} custom={slideDirection} mode="sync">
               <motion.img
@@ -93,7 +102,7 @@ const HomeHero = ({ vehicles }: { vehicles: Vehicle[] }) => {
                 sizes="(max-width: 900px) 100vw, 65vw"
                 width="1440"
                 height="810"
-                alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                alt={formatVehicleTitle(vehicle)}
                 fetchPriority="high"
                 decoding="async"
                 initial={{ x: reduceMotion ? '0%' : `${slideDirection * 100}%` }}
@@ -104,9 +113,9 @@ const HomeHero = ({ vehicles }: { vehicles: Vehicle[] }) => {
             </AnimatePresence>
           </span>
           <span className="reference-home-hero__vehicle-panel">
-            <span className="reference-home-hero__vehicle-kicker">Featured Vehicle</span>
-            <span className="reference-home-hero__vehicle-title">{vehicle.year} {vehicle.make} {vehicle.model}</span>
-            <span className="reference-home-hero__vehicle-price">{formatPrice(vehicle.price)}</span>
+            <span className="reference-home-hero__vehicle-kicker">{vehicle.status === 'Placeholder' ? 'Placeholder Listing' : 'Featured Vehicle'}</span>
+            <span className="reference-home-hero__vehicle-title">{formatVehicleTitle(vehicle)}</span>
+            <span className="reference-home-hero__vehicle-price">{formatVehiclePrice(vehicle)}</span>
             <span className="reference-home-hero__vehicle-specs">
               <span>{vehicle.mileage > 0 ? `${formatNumber(vehicle.mileage)} miles` : 'Mileage not listed'}</span>
               <span>{vehicle.bodyType}</span>
@@ -186,7 +195,7 @@ const homeCustomerReviews = [
   {
     author: 'Michel Rallo',
     date: '10 months ago',
-    quote: 'Had a great experience at Osborne Motors browsing their classic collection. The hospitality here is amazing—they make you feel welcome from the moment you walk in. Super knowledgeable team and a zero-pressure environment. You can tell they truly love what they do. Highly recommend stopping by!',
+    quote: 'Had a great experience at Osborne Motors browsing their classic collection. The hospitality here is amazing. They make you feel welcome from the moment you walk in. Super knowledgeable team and a zero-pressure environment. You can tell they truly love what they do. Highly recommend stopping by!',
   },
   {
     author: 'Oliver Jefferson',
@@ -218,7 +227,6 @@ const HomeReviewsSection = () => (
             <article className="home-review-card" key={review.author}>
               <div className="home-review-card__meta">
                 <span className="home-review-card__stars" aria-label="5 out of 5 stars">★★★★★</span>
-                <time>{review.date}</time>
               </div>
               <p className="home-review-card__quote">“{review.quote}”</p>
               <h3>{review.author}</h3>
@@ -258,7 +266,7 @@ const HomeVisitSection = () => (
             </a>
           </div>
           <div className="home-visit__map">
-            <iframe title="Map showing Osborne Motors in Norfolk" src={business.mapEmbedUrl.replace('t=k', 't=m')} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            <iframe title="Map showing Osborne Motors in Norfolk" src={business.mapEmbedUrl} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           </div>
         </div>
         <div className="home-visit__actions">

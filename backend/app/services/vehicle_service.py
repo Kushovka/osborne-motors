@@ -136,7 +136,7 @@ def get_vehicle_by_slug(db: Session, slug: str) -> Vehicle | None:
 
 
 def get_vehicle_filters(db: Session, make: str | None = None) -> dict:
-    visible_vehicles = Vehicle.status.not_in(HIDDEN_VEHICLE_STATUSES)
+    visible_vehicles = Vehicle.status.not_in(HIDDEN_VEHICLE_STATUSES | {"Placeholder"})
     model_query = select(Vehicle.model).where(visible_vehicles).distinct().order_by(Vehicle.model)
     price_query = select(Vehicle.price).where(visible_vehicles, Vehicle.price > 0).distinct().order_by(Vehicle.price)
     if make:

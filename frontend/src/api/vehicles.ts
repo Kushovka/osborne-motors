@@ -218,16 +218,18 @@ export const getVehicleFilters = async (make?: string): Promise<VehicleFilters> 
     params: { make: make || undefined },
   })
 
+  const isPlaceholderValue = (value: string) => /^(placeholder|vehicle\s+\d+)$/i.test(value.trim())
+
   return {
-    makes: response.data.makes,
-    models: response.data.models,
-    years: response.data.years,
-    bodyTypes: response.data.body_types,
-    transmissions: response.data.transmissions.filter(Boolean),
-    drivetrains: response.data.drivetrains.filter(Boolean),
-    colors: response.data.colors.filter(Boolean),
-    statuses: response.data.statuses,
-    prices: response.data.prices ?? [],
+    makes: response.data.makes.filter((value) => !isPlaceholderValue(value)),
+    models: response.data.models.filter((value) => !isPlaceholderValue(value)),
+    years: response.data.years.filter((value) => value > 0),
+    bodyTypes: response.data.body_types.filter((value) => !isPlaceholderValue(value)),
+    transmissions: response.data.transmissions.filter((value) => Boolean(value) && !isPlaceholderValue(value)),
+    drivetrains: response.data.drivetrains.filter((value) => Boolean(value) && !isPlaceholderValue(value)),
+    colors: response.data.colors.filter((value) => Boolean(value) && !isPlaceholderValue(value)),
+    statuses: response.data.statuses.filter((value) => value !== 'Placeholder'),
+    prices: (response.data.prices ?? []).filter((value) => value > 0),
     priceMin: response.data.price_min,
     priceMax: response.data.price_max,
     mileageMin: response.data.mileage_min,

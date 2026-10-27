@@ -1,6 +1,7 @@
 import { SectionHeading } from '../components/SectionHeading'
 import { Seo } from '../components/Seo'
 import { business } from '../data/business'
+import { trackContactCta } from '../utils/ctaTracking'
 
 const terms = [
   ['Website information', 'Website content is provided for general information and may change. Contact Osborne Motors to confirm current details.'],
@@ -26,7 +27,7 @@ export const TermsPage = () => (
           </div>
           <div className="mt-8 rounded-md bg-[var(--color-section)] p-4 text-sm font-normal leading-7 text-[var(--color-muted)]">
             For current vehicle details or terms, contact {business.name} at{' '}
-            <a className="font-normal text-[var(--color-link)]" href={business.phoneHref || business.contactHref}>{business.phoneDisplay}</a>.
+            <a className="font-normal text-[var(--color-link)]" href={business.phoneHref || business.contactHref} onClick={() => trackContactCta('phone_click', 'Terms Page Phone CTA')}>{business.phoneDisplay}</a>.
           </div>
         </div>
       </div>

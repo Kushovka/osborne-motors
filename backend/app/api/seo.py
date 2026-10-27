@@ -21,7 +21,6 @@ PUBLIC_PATHS = (
     "/team",
     "/contact",
     "/warranty",
-    "/guarantee",
     "/delivery",
     "/privacy-policy",
     "/terms",
@@ -32,7 +31,7 @@ PUBLIC_PATHS = (
 def get_sitemap(db: Session = Depends(get_db)) -> Response:
     slugs = db.scalars(
         select(Vehicle.slug)
-        .where(Vehicle.status.not_in(HIDDEN_VEHICLE_STATUSES))
+        .where(Vehicle.status.not_in(HIDDEN_VEHICLE_STATUSES | {"Placeholder"}))
         .order_by(Vehicle.slug)
     ).all()
     paths = [*PUBLIC_PATHS, *(f"/inventory/{quote(slug, safe='-._~')}" for slug in slugs)]
