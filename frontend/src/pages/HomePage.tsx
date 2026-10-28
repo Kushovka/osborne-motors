@@ -46,7 +46,7 @@ export const HomePage = () => {
       description="Visit Osborne Motors at 516 E Norfolk Ave in Norfolk, Nebraska."
       schema={autoRepairSchema}
     />
-    <HomeHero vehicles={vehicles.slice(3, 6)} />
+    <HomeHero vehicles={vehicles.slice(3, 6)} loading={loading} />
     <section className="home-featured-contact" aria-label="Popular vehicles and dealership contact information">
       <FeaturedVehicles vehicles={vehicles.slice(0, 3)} loading={loading} />
       <HomeContactPanel />
@@ -58,7 +58,7 @@ export const HomePage = () => {
   )
 }
 
-const HomeHero = ({ vehicles }: { vehicles: Vehicle[] }) => {
+const HomeHero = ({ vehicles, loading }: { vehicles: Vehicle[]; loading: boolean }) => {
   const [activeSlide, setActiveSlide] = useState(0)
   const [slideDirection, setSlideDirection] = useState(1)
   const [isPaused, setIsPaused] = useState(false)
@@ -124,7 +124,7 @@ const HomeHero = ({ vehicles }: { vehicles: Vehicle[] }) => {
             </span>
             <span className="reference-home-hero__vehicle-cta">View Vehicle <FaArrowRight aria-hidden="true" /></span>
           </span>
-        </Link> : <img src="/images/vehicle-photo-coming-soon.webp" sizes="(max-width: 900px) 100vw, 65vw" width="1440" height="810" alt="Vehicle photo coming soon" fetchPriority="high" decoding="async" />}
+        </Link> : !loading && <img src="/images/vehicle-photo-coming-soon.webp" sizes="(max-width: 900px) 100vw, 65vw" width="1440" height="810" alt="Vehicle photo coming soon" fetchPriority="high" decoding="async" />}
         {slideCount > 1 && <div className="reference-home-hero__controls" aria-label="Featured vehicle photos">
           <div className="reference-home-hero__indicators" aria-hidden="true">{slides.map((item, index) => <i key={item.id} className={index === activeSlide ? 'is-active' : undefined} />)}</div>
           <button type="button" aria-label="Previous vehicle" onClick={() => changeSlide(-1)}><FaChevronLeft aria-hidden="true" /></button>
@@ -146,8 +146,8 @@ const FeaturedVehicles = ({ vehicles, loading }: { vehicles: Vehicle[]; loading:
           </div>
           <Link to="/inventory" className="featured-stock__all-link">View All Inventory <FaArrowRight aria-hidden="true" /></Link>
         </div>
-        <div className="featured-stock__grid inventory-vehicle-grid" role="region" aria-label="Popular vehicles" aria-live="polite">
-          {loading ? <p className="featured-stock__empty">Loading vehicles…</p>
+        <div className="featured-stock__grid inventory-vehicle-grid" role="region" aria-label="Popular vehicles" aria-live="polite" aria-busy={loading}>
+          {loading ? Array.from({ length: 3 }, (_, index) => <FeaturedVehicleSkeleton key={index} />)
             : vehicles.length ? vehicles.map((vehicle) => <InventoryVehicleCard key={vehicle.id} vehicle={vehicle} />)
               : <p className="featured-stock__empty">Vehicle listings are coming soon. Call Osborne Motors for current vehicle information.</p>}
         </div>
@@ -155,6 +155,18 @@ const FeaturedVehicles = ({ vehicles, loading }: { vehicles: Vehicle[]; loading:
     </div>
   )
 }
+
+const FeaturedVehicleSkeleton = () => (
+  <div className="inventory-vehicle-card inventory-vehicle-card--skeleton featured-vehicle-skeleton" aria-hidden="true">
+    <div className="inventory-vehicle-card__photo" />
+    <div className="inventory-vehicle-card__body">
+      <span className="inventory-skeleton-line inventory-skeleton-line--title" />
+      <span className="inventory-skeleton-line inventory-skeleton-line--price" />
+      <span className="inventory-skeleton-line inventory-skeleton-line--specs" />
+      <span className="inventory-skeleton-line inventory-skeleton-line--details" />
+    </div>
+  </div>
+)
 
 const HomeContactPanel = () => (
   <aside className="home-contact-panel" aria-labelledby="home-contact-title">

@@ -17,7 +17,7 @@ const queryNumber = (value: string | null) => {
 
 const priceSteps = [10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 80000, 100000]
 
-const InventoryCardSkeleton = () => <div className="inventory-vehicle-card inventory-vehicle-card--skeleton" aria-hidden="true">
+const InventoryCardSkeleton = () => <div className="inventory-vehicle-card inventory-vehicle-card--reference inventory-vehicle-card--skeleton" aria-hidden="true">
   <div className="inventory-vehicle-card__photo" />
   <div className="inventory-vehicle-card__body">
     <span className="inventory-skeleton-line inventory-skeleton-line--title" />

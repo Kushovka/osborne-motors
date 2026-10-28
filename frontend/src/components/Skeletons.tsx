@@ -28,33 +28,55 @@ export const VehicleGridSkeleton = ({ count = 6 }: { count?: number }) => (
 )
 
 export const VehicleDetailSkeleton = () => (
-  <section className="section soft-band">
-    <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:px-8">
-      <div className="grid gap-3">
-        <SkeletonBlock className="aspect-[4/3] w-full rounded-md" />
-        <div className="grid grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <SkeletonBlock key={index} className="h-20 rounded-md" />
-          ))}
+  <section className="vehicle-detail-loading" aria-label="Loading vehicle details" aria-busy="true">
+    <div className="vehicle-detail-loading__titlebar">
+      <div className="vehicle-detail-loading__titlebar-inner vehicle-detail-container" aria-hidden="true">
+        <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__page-title" />
+        <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__back-link" />
+      </div>
+    </div>
+    <div className="vehicle-detail-container vehicle-detail-loading__container" aria-hidden="true">
+      <div className="vehicle-detail-loading__hero">
+        <div className="vehicle-detail-loading__gallery">
+          <div className="vehicle-detail-loading__thumbnails">
+            {Array.from({ length: 6 }).map((_, index) => <SkeletonBlock key={index} className="vehicle-detail-loading__block" />)}
+          </div>
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__main-photo" />
+        </div>
+        <div className="vehicle-detail-loading__price-panel">
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__vehicle-title" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__price" />
+          <div className="vehicle-detail-loading__facts">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div className="vehicle-detail-loading__fact" key={index}>
+                <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__fact-label" />
+                <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__fact-value" />
+              </div>
+            ))}
+          </div>
+          <div className="vehicle-detail-loading__actions">
+            <SkeletonBlock className="vehicle-detail-loading__block" />
+            <SkeletonBlock className="vehicle-detail-loading__block" />
+          </div>
         </div>
       </div>
-      <div>
-        <SkeletonBlock className="h-4 w-32" />
-        <SkeletonBlock className="mt-4 h-10 w-4/5" />
-        <SkeletonBlock className="mt-4 h-10 w-36" />
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <div key={index} className="surface-card rounded-md p-4">
-              <SkeletonBlock className="h-3 w-20" />
-              <SkeletonBlock className="mt-3 h-5 w-28" />
-            </div>
-          ))}
+      <div className="vehicle-detail-loading__information">
+        <div className="vehicle-detail-loading__info-panel">
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__info-heading" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line vehicle-detail-loading__text-line--short" />
         </div>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <SkeletonBlock className="h-12 w-full sm:w-32" />
-          <SkeletonBlock className="h-12 w-full sm:w-36" />
+        <div className="vehicle-detail-loading__info-panel">
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__info-heading" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line vehicle-detail-loading__text-line--short" />
         </div>
-        <SkeletonBlock className="mt-6 h-24 w-full" />
+        <div className="vehicle-detail-loading__info-panel">
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__info-heading" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line vehicle-detail-loading__text-line--short" />
+          <SkeletonBlock className="vehicle-detail-loading__block vehicle-detail-loading__text-line" />
+        </div>
       </div>
     </div>
   </section>
